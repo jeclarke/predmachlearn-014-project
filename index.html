@@ -61,7 +61,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="summary" class="section level1">
 <h1>Summary</h1>
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.</p>
-<p>This report describes an algorithm that attempts to predict how well the exercise was performed using data from accelerometers on the belt, forearm, arm, and dumbell.</p>
+<p>This report describes an algorithm that attempts to predict how well the exercise was performed using data from accelerometers on the belt, forearm, arm, and dumbell. The excercises were performed in 5 different ways exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). It is this class (A - E) that the algorithm attempts to predict based on the sensor data.
+</p>
 <p>More information about the source data is available here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
 <p>The algorithm presented here uses an ensemble classifier to give an estimated accuracy of 99% on previously unseen data.</p>
 <p>The algorithm correctly classified 19/20 samples from the the grading data set. This agrees well with the estimated out of sample error.</p>
