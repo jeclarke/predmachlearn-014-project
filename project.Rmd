@@ -12,7 +12,7 @@ This report describes an algorithm that attempts to predict how well the exercis
 
 More information about the source data is available here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
 
-The algorithm presented here uses an ensemble classifier to give an estimated accuracy of 80% on previously unseen data.
+The algorithm presented here uses an ensemble classifier to give an estimated accuracy of 99% on previously unseen data.
 
 The algorithm correctly classified x/20 samples from the the validation data set.
 
@@ -27,7 +27,7 @@ https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 ## Load and clean data
 The data is loaded and columns with missing data are dropped.
-```{r, warning=F}
+```{r, warning=F, message=F}
 library(caret)
 srcdata <- read.csv("pml-training.csv")
 dropNa <- srcdata[,colSums(is.na(srcdata) | srcdata =="") == 0]
@@ -35,30 +35,31 @@ set.seed(98562)
 ```
 
 ## Train models
-The models are trained using 75% of the data, with 25% saved for cross validation.
-```{r, warning=F, results='hide'}
+The models are trained using 75% of the data. One would expect the model to perform well on the data it was trained with so 25% is saved for cross validation - the model is run against data it has not seen before to estimate the out of sample error.
+```{r, warning=F, message=F, results='hide'}
 inTrain = createDataPartition(dropNa$classe, p = 0.75, list=F)
 training = dropNa[inTrain,]
 testing = dropNa[-inTrain,]
 ```
+The default options are used for all models but note that the features are normalised to give equal initial weighting and principle component analysis used to automatically select the features that are the best predictors.
 
 ### Random Forests
-```{r, warning=F, results='hide'}
+```{r, warning=F, message=F, results='hide'}
 mod1 <- train(classe~.,method="rf",preProcess = c("center","scale","pca"),training)
 ```
 
 ### Boosted Trees
-```{r, warning=F, results='hide'}
+```{r, warning=F, message=F, results='hide'}
 mod2 <- train(classe~.,method="gbm",preProcess = c("center","scale","pca"),training)
 ```
 
 ### Linear Discriminant Analysis
-```{r, warning=F, results='hide'}
+```{r, warning=F, message=F, results='hide'}
 mod3 <- train(classe~.,method="lda",preProcess = c("center","scale","pca"),training)
 ```
 
 ### Ensemble Model
-```{r, warning=F, results='hide'}
+```{r, warning=F, message=F, results='hide'}
 pred1 <- predict(mod1,testing)
 pred2 <- predict(mod2,testing)
 pred3 <- predict(mod3,testing)
@@ -69,17 +70,18 @@ pred <- predict(mod,testing)
 
 ## Evaluate model
 The model is evaluated using the 25% of the data that was set aside.
-```{r warning=F}
+```{r warning=F, message=F}
 confusionMatrix(testing$classe, pred)
 oosError <- round((1 - confusionMatrix(testing$classe, pred)$overall[1]) * 100,0)
 ```
 This suggests the out of sample error is `r oosError`%.
 
+It is interesting to see that where the few misclassifications do occur they are with near-by categories, e.g. A is never confused with D or E and vie versa.
 # Appendix
 
 ## Run model against grading test
 The model is run against the grading test to generate the data for submission.
-```{r, warning=F}
+```{r, warning=F, message=F}
 graddata <- read.csv("pml-testing.csv")
 gradDropNa <- graddata[,colSums(is.na(graddata) | graddata =="") == 0]
 gradDropNa <- gradDropNa[,1:length(gradDropNa)-1]

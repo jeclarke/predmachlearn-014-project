@@ -63,7 +63,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.</p>
 <p>This report describes an algorithm that attempts to predict how well the exercise was performed using data from accelerometers on the belt, forearm, arm, and dumbell.</p>
 <p>More information about the source data is available here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
-<p>The algorithm presented here uses an ensemble classifier to give an estimated accuracy of 80% on previously unseen data.</p>
+<p>The algorithm presented here uses an ensemble classifier to give an estimated accuracy of 99% on previously unseen data.</p>
 <p>The algorithm correctly classified x/20 samples from the the validation data set.</p>
 </div>
 <div id="data" class="section level1">
@@ -76,18 +76,17 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="load-and-clean-data" class="section level2">
 <h2>Load and clean data</h2>
 <p>The data is loaded and columns with missing data are dropped.</p>
-<pre class="r"><code>library(caret)
-
-srcdata &lt;- read.csv(&quot;pml-training.csv&quot;)
+<pre class="r"><code>srcdata &lt;- read.csv(&quot;pml-training.csv&quot;)
 dropNa &lt;- srcdata[,colSums(is.na(srcdata) | srcdata ==&quot;&quot;) == 0]
 set.seed(98562)</code></pre>
 </div>
 <div id="train-models" class="section level2">
 <h2>Train models</h2>
-<p>The models are trained using 75% of the data, with 25% saved for cross validation.</p>
+<p>The models are trained using 75% of the data. One would expect the model to perform well on the data it was trained with so 25% is saved for cross validation - the model is run against data it has not seen before to estimate the out of sample error.</p>
 <pre class="r"><code>inTrain = createDataPartition(dropNa$classe, p = 0.75, list=F)
 training = dropNa[inTrain,]
 testing = dropNa[-inTrain,]</code></pre>
+<p>The default options are used for all models but note that the features are normalised to give equal initial weighting and principle component analysis used to automatically select the features that are the best predictors.</p>
 <div id="random-forests" class="section level3">
 <h3>Random Forests</h3>
 <pre class="r"><code>mod1 &lt;- train(classe~.,method=&quot;rf&quot;,preProcess = c(&quot;center&quot;,&quot;scale&quot;,&quot;pca&quot;),training)</code></pre>
@@ -117,36 +116,37 @@ pred &lt;- predict(mod,testing)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
-## Prediction  A  B  C  D  E
-##          A 50  4  2  0  0
-##          B  4 30  4  0  0
-##          C  2  3 30  0  0
-##          D  0  0  3 26  4
-##          E  0  0  0  2 35
+## Prediction    A    B    C    D    E
+##          A 1388    2    5    0    0
+##          B    9  933    7    0    0
+##          C    0   11  843    1    0
+##          D    0    0   25  778    1
+##          E    0    0    1    5  895
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.8593          
-##                  95% CI : (0.8031, 0.9044)
-##     No Information Rate : 0.2814          
+##                Accuracy : 0.9863          
+##                  95% CI : (0.9827, 0.9894)
+##     No Information Rate : 0.2849          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.8221          
+##                   Kappa : 0.9827          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.8929   0.8108   0.7692   0.9286   0.8974
-## Specificity            0.9580   0.9506   0.9688   0.9591   0.9875
-## Pos Pred Value         0.8929   0.7895   0.8571   0.7879   0.9459
-## Neg Pred Value         0.9580   0.9565   0.9451   0.9880   0.9753
-## Prevalence             0.2814   0.1859   0.1960   0.1407   0.1960
-## Detection Rate         0.2513   0.1508   0.1508   0.1307   0.1759
-## Detection Prevalence   0.2814   0.1910   0.1759   0.1658   0.1859
-## Balanced Accuracy      0.9254   0.8807   0.8690   0.9438   0.9425</code></pre>
+## Sensitivity            0.9936   0.9863   0.9569   0.9923   0.9989
+## Specificity            0.9980   0.9960   0.9970   0.9937   0.9985
+## Pos Pred Value         0.9950   0.9831   0.9860   0.9677   0.9933
+## Neg Pred Value         0.9974   0.9967   0.9906   0.9985   0.9998
+## Prevalence             0.2849   0.1929   0.1796   0.1599   0.1827
+## Detection Rate         0.2830   0.1903   0.1719   0.1586   0.1825
+## Detection Prevalence   0.2845   0.1935   0.1743   0.1639   0.1837
+## Balanced Accuracy      0.9958   0.9911   0.9769   0.9930   0.9987</code></pre>
 <pre class="r"><code>oosError &lt;- round((1 - confusionMatrix(testing$classe, pred)$overall[1]) * 100,0)</code></pre>
-<p>This suggests the out of sample error is 14%.</p>
+<p>This suggests the out of sample error is 1%.</p>
+<p>It is interesting to see that where the few misclassifications do occur they are with near-by categories, e.g. A is never confused with D or E and vie versa.</p> 
 </div>
 </div>
 <div id="appendix" class="section level1">
@@ -167,23 +167,23 @@ print(predDf)</code></pre>
 <pre><code>##    predGrad
 ## 1         B
 ## 2         A
-## 3         C
+## 3         A
 ## 4         A
 ## 5         A
-## 6         A
-## 7         B
-## 8         A
+## 6         E
+## 7         D
+## 8         B
 ## 9         A
 ## 10        A
-## 11        A
+## 11        B
 ## 12        C
 ## 13        B
 ## 14        A
-## 15        B
-## 16        B
+## 15        E
+## 16        E
 ## 17        A
-## 18        A
-## 19        A
+## 18        B
+## 19        B
 ## 20        B</code></pre>
 </div>
 </div>
